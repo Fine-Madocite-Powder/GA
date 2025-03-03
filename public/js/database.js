@@ -24,12 +24,11 @@ async function registerUser(username, hashedPassword) {
 
     try {
 
-        response = await connection.execute(`
+        connection.execute(`
             INSERT INTO players (username, password_hash)
             VALUES (?, ?)
             `, [username, hashedPassword])
 
-        return response[0]
     } finally {
         await connection.end();
     }

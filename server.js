@@ -24,17 +24,34 @@ app.set("views", "./views");
 
 
 app.get("/", async (req, res) => {
-    res.render("start")
+    const errorMessage = "";
+    res.render("start", {errorMessage})
 })
 
-app.get("/login", (req, res) => {
+app.post("/login", async (req, res) => {
+    const { username, password } = req.body;
+    console.log(username)
+    console.log(password)
+    
+    const userRow = await db.getPlayerByUsername(username);
 
+    if (userRow === undefined) {
+        res.render("start", {errorMessage: "That user does not exist"})
+    } else if (await bcrypt.compare(password, userRow.password_hash)) {
+
+
+
+        res.render("home")
+
+    } else {
+        res.render("start", {errorMessage: "Incorrect password, try again"})
+    }
 })
+
 
 app.get("/register", (req, res) => {
     
-    const errorMessage = ""
-    res.render("register", {errorMessage})
+    res.render("register")
 })
 
 
@@ -47,12 +64,12 @@ app.post("/register", async (req, res) => {
     const otherUser = await db.getPlayerByUsername(username);
 
     if (otherUser !== undefined) {
-        const errorMessage = "That username is already taken";
-        return res.render("register", {errorMessage} );
+        return res.render("register", {errorMessage: "That username is already taken"});
     }
 
-    console.log(`Username: ${username}`);
-    console.log(`Unhashed Password: ${password}`)
+    console.log(`---- New user registered:
+Username: ${username}
+Unhashed Password: ${password}`)
 
     try {
         const saltRounds = 10;
@@ -60,8 +77,7 @@ app.post("/register", async (req, res) => {
 
         console.log(`Hashed Password: ${hashedPassword}`);
 
-        const response = await db.registerUser(username, hashedPassword);
-        console.log(response);
+        db.registerUser(username, hashedPassword);
 
         res.render("home");
     } catch (error) {

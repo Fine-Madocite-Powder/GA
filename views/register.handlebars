@@ -4,7 +4,9 @@
     Username:
     <input type="text" name="username">
     <br>
-    
+    {{#if errorMessage}}
+    <div class="error">{{errorMessage}}</div>
+    {{/if}}
     <br>
     Password: <input type="text" name="password">
     <br><br>
