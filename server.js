@@ -3,6 +3,7 @@ const socketIO = require('socket.io');
 const port = process.env.PORT || 3000;
 const bcrypt = require('bcrypt');
 
+
 const publicPath = path.join(__dirname, './public');
 
 const http = require('http');
@@ -24,8 +25,8 @@ app.set("views", "./views");
 
 
 app.get("/", async (req, res) => {
-    const errorMessage = "";
-    res.render("start", {errorMessage})
+
+    res.render("start")
 })
 
 app.post("/login", async (req, res) => {
@@ -39,8 +40,7 @@ app.post("/login", async (req, res) => {
         res.render("start", {errorMessage: "That user does not exist"})
     } else if (await bcrypt.compare(password, userRow.password_hash)) {
 
-
-
+        res.cookie('username', username, { httpOnly: true, secure: true, maxAge: 3600000 }); // 1 hour
         res.render("home")
 
     } else {
@@ -48,13 +48,9 @@ app.post("/login", async (req, res) => {
     }
 })
 
-
-app.get("/register", (req, res) => {
-    
+app.get("/register", (req, res) => {  
     res.render("register")
 })
-
-
 // This function registers new users when they submit their username and password in the "register" page.
 // If the username is not already registered, it is added along with a hashed password. If it is in use, the user is returned
 // to the registry page and handed an error message.
@@ -84,6 +80,20 @@ Unhashed Password: ${password}`)
         res.status(500).send('Error hashing password. This is most likely our fault.');
     }
 })
+
+
+io.on('connection', (socket) => {
+    console.log('New user connected');
+
+    // Example of sending a message to the client
+    socket.emit('message', 'Welcome to the home page!');
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected');
+    });
+});
+
+
 
 server.listen(port, () => {
     console.log("Server running.")
